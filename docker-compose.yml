@@ -4,43 +4,67 @@ services:
     depends_on:
       - node-slave1
       - node-slave2
+      - node-slave3
     image: cluster-base:latest
     container_name: node-master
     hostname: node-master
     tty: true
+    volumes:
+      - /home/zedmor/:/home/zedmor
     ports:
       - "8088:8088"
       - "50070:50070"
       - "50030:50030"
       - "8080:8080"
       - "8042:8042"
+      - "8032:8032"
       - "8888:8888"
+      - "7077:7077"
+      - "80:80"
     networks:
       cluster-network:
-        aliases: 
+        aliases:
           - node-master
   node-slave1:
     image: cluster-base:latest
     container_name: node-slave1
     hostname: node-slave1
     tty: true
+    volumes:
+      - /home/zedmor/:/home/zedmor
     ports:
       - "7042:8042"
     networks:
       cluster-network:
-        aliases: 
+        aliases:
           - node-slave1
   node-slave2:
     image: cluster-base:latest
     container_name: node-slave2
     hostname: node-slave2
     tty: true
+    volumes:
+      - /home/zedmor/:/home/zedmor
     ports:
       - "9042:8042"
     networks:
       cluster-network:
-        aliases: 
+        aliases:
           - node-slave2
+  node-slave3:
+    image: cluster-base:latest
+    container_name: node-slave3
+    hostname: node-slave3
+    tty: true
+    volumes:
+      - /home/zedmor/:/home/zedmor
+    ports:
+      - "10042:8042"
+    networks:
+      cluster-network:
+        aliases:
+          - node-slave3
+
 networks:
   cluster-network:
     driver: bridge

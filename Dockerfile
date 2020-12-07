@@ -8,13 +8,30 @@ ENV PATH="${HADOOP_HOME}/bin:${HADOOP_HOME}/sbin:${SPARK_HOME}/bin:${SPARK_HOME}
 ENV HADOOP_VERSION 2.7.0
 ENV PYSPARK_DRIVER_PYTHON=jupyter
 ENV PYSPARK_DRIVER_PYTHON_OPTS='notebook'
-ENV PYSPARK_PYTHON=python3
+ENV PYSPARK_PYTHON=/usr/bin/python3
+
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      ganglia-monitor \
+      ganglia-webfrontend \
+      gmetad \
+      supervisor \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+RUN ln -s /etc/ganglia-webfrontend/apache.conf /etc/apache2/conf-available/ganglia.conf \
+    && a2enconf ganglia
+
+COPY files/ /
+
+VOLUME ["/var/lib/ganglia"]
 
 RUN apt-get update && \
     apt-get install -y wget nano openjdk-8-jdk ssh openssh-server
 RUN apt update && apt install -y python3 python3-pip python3-dev build-essential libssl-dev libffi-dev libpq-dev
 
 COPY /confs/requirements.req /
+RUN pip3 install --upgrade pip==20.1.1
 RUN pip3 install -r requirements.req
 RUN pip3 install dask[bag] --upgrade
 RUN pip3 install --upgrade toree
@@ -24,7 +41,7 @@ RUN wget -P /tmp/ https://archive.apache.org/dist/hadoop/common/hadoop-2.7.0/had
 RUN tar xvf /tmp/hadoop-2.7.0.tar.gz -C /tmp && \
 	mv /tmp/hadoop-2.7.0 /opt/hadoop
 
-RUN wget -P /tmp/ https://downloads.apache.org/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz
+RUN wget -P /tmp/ https://archive.apache.org/dist/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz
 RUN tar xvf /tmp/spark-2.4.5-bin-hadoop2.7.tgz -C /tmp && \
     mv /tmp/spark-2.4.5-bin-hadoop2.7 ${SPARK_HOME}
 
@@ -47,6 +64,9 @@ EXPOSE 7077
 EXPOSE 4040
 EXPOSE 8020
 EXPOSE 22
+EXPOSE 8649
+EXPOSE 8649/udp
+EXPOSE 80
 
 RUN mkdir lab
 COPY notebooks/*.ipynb /root/lab/
